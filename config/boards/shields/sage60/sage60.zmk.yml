@@ -1,0 +1,10 @@
+file_format: "1"
+id: sage60
+name: Sage60
+type: shield
+requires: [pro_micro]
+features:
+  - keys
+siblings:
+  - sage60_left
+  - sage60_right

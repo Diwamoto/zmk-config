@@ -1,0 +1,9 @@
+file_format: "1"
+id: ae_nrf52840
+name: AE NRF52840
+type: board
+arch: arm
+outputs:
+  - usb
+  - ble
+url: https://akizukidenshi.com/catalog/g/gK-17484/

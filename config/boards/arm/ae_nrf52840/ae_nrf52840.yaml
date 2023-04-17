@@ -1,0 +1,16 @@
+id: ae_nrf52840
+name: AE NRF52840
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - adc
+  - usb_device
+  - usb_cdc
+  - ble
+  - ieee802154
+  - counter
+  - watchdog
