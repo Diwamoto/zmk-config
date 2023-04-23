@@ -26,6 +26,7 @@
             tap-ms = <0>;
             bindings = <&macro_tap &kp A>;
             // secret!
+        };
     };
 };
 
