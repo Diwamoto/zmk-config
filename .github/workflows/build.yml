@@ -17,7 +17,7 @@ jobs:
 
       - name: Fetch Build Matrix
         run: |
-          echo "build_matrix=$(yaml2json '${{ inputs.build_matrix_path }}' | jq -c .)" >> $GITHUB_ENV
+          echo "build_matrix=$(yaml2json build.yaml | jq -c .)" >> $GITHUB_ENV
           yaml2json build.yaml | jq
   build:
     runs-on: ubuntu-latest
