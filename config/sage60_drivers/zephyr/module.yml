@@ -1,0 +1,6 @@
+name: sage60_drivers
+build:
+  depends: 
+    - drivers
+  cmake: .
+  kconfig: Kconfig

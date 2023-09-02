@@ -1,0 +1,11 @@
+/*
+ * Copyright (c) 2023 Diwamoto_
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "sage60_ec.dtsi"
+
+&default_transform {
+	col-offset = <6>;
+};

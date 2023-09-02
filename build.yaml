@@ -17,3 +17,8 @@ include:
     shield: sage60_left
   - board: ae_nrf52840
     shield: sage60_right
+  - board: ae_nrf52840
+    shield: sage60_ec_left
+  - board: ae_nrf52840
+    shield: sage60_ec_right
+
