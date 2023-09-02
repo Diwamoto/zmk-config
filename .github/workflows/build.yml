@@ -1,5 +1,7 @@
 on: [push, pull_request, workflow_dispatch]
 
+name: Build
+
 jobs: 
   matrix:
     runs-on: ubuntu-latest
@@ -17,7 +19,6 @@ jobs:
         run: |
           echo "build_matrix=$(yaml2json '${{ inputs.build_matrix_path }}' | jq -c .)" >> $GITHUB_ENV
           yaml2json "${{ inputs.build_matrix_path }}" | jq
-
   build:
     runs-on: ubuntu-latest
     container:
@@ -70,7 +71,7 @@ jobs:
 
       - name: West Build (${{ env.display_name }})
         shell: sh -x {0}
-        run: west build -s zmk/app -b "${{ matrix.board }}" -- -DZMK_CONFIG="${GITHUB_WORKSPACE}/${{ inputs.config_path }}" ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+        run: west build -s zmk/app -b "${{ matrix.board }}" -- -DZEPHYR_EXTRA_MODULES="$PWD/zmk/app/drivers;${GITHUB_WORKSPACE}/config/sage60_drivers" -DZMK_CONFIG="${GITHUB_WORKSPACE}/${{ inputs.config_path }}" ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 
       - name: ${{ env.display_name }} Kconfig file
         run: grep -v -e "^#" -e "^$" build/zephyr/.config | sort
