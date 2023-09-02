@@ -1,6 +1,23 @@
 on: [push, pull_request, workflow_dispatch]
 
 jobs: 
+  matrix:
+    runs-on: ubuntu-latest
+    name: Fetch Build Keyboards
+    outputs:
+      build_matrix: ${{ env.build_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install yaml2json
+        run: python3 -m pip install remarshal
+
+      - name: Fetch Build Matrix
+        run: |
+          echo "build_matrix=$(yaml2json '${{ inputs.build_matrix_path }}' | jq -c .)" >> $GITHUB_ENV
+          yaml2json "${{ inputs.build_matrix_path }}" | jq
+
   build:
     runs-on: ubuntu-latest
     container:
