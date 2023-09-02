@@ -96,7 +96,7 @@ jobs:
 
       - name: West Build (${{ env.display_name }})
         shell: sh -x {0}
-        run: west build -s zmk/app -b "${{ matrix.board }}" -- -DZEPHYR_EXTRA_MODULES="$PWD/zmk/app/drivers;${GITHUB_WORKSPACE}/config/sage60_drivers" -DZMK_CONFIG="${GITHUB_WORKSPACE}/${{ inputs.config_path }}/config" ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
+        run: west build -s zmk/app -b "${{ matrix.board }}" -- -DZEPHYR_EXTRA_MODULES="$PWD/zmk/app/drivers;${GITHUB_WORKSPACE}/config/sage60_drivers" -DZMK_CONFIG="${GITHUB_WORKSPACE}/${{ inputs.config_path }}config" ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 
       - name: ${{ env.display_name }} Kconfig file
         run: grep -v -e "^#" -e "^$" build/zephyr/.config | sort
