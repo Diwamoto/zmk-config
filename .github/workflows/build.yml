@@ -27,7 +27,7 @@ jobs:
     name: Build
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.build_matrix) }}
+      matrix: ${{fromJson(needs.matrix.outputs.build_matrix)}}
     steps:
       - name: Prepare variables
         shell: sh -x {0}
