@@ -11,12 +11,18 @@ properties:
   gpios:
     type: phandle-array
     required: true
-  adc_channel:
-    type: int
-    default: 0
   press_point:
     type: int
     default: 100
   release_point:
     type: int
     default: 20
+  active-polling-interval-ms:
+    type: int
+    default: 8
+  idle-polling-interval-ms:
+    type: int
+    default: 3
+  sleep-polling-interval-ms:
+    type: int
+    default: 3
