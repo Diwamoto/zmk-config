@@ -11,6 +11,9 @@ properties:
   gpios:
     type: phandle-array
     required: true
+  io-channels:
+    type: phandle-array
+    required: true
   press_point:
     type: int
     default: 100

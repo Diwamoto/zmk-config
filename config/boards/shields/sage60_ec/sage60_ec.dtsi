@@ -5,11 +5,9 @@
  */
 
 #include <dt-bindings/zmk/matrix_transform.h>
-#include <dt-bindings/zmk/kscan_mock.h>
 
 / {
     chosen {
-        zmk,kscan = &kscan0;
         zmk,matrix_transform = &default_transform;
     };
 
@@ -31,34 +29,4 @@ RC(4,0) RC(4,1) RC(4,2) RC(4,3) RC(4,4) RC(4,5)                 RC(4,11) RC(4,10
         >;
     };
 
-    kscan0: kscan_0 {
-        compatible = "zmk,kscan-ec-matrix";
-        label = "KSCAN";
-        gpios
-            = <&pro_micro 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row0
-            , <&pro_micro 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row1
-            , <&pro_micro 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row2
-            , <&pro_micro 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row3
-            , <&pro_micro 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row4
-            , <&pro_micro 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel0
-            , <&pro_micro 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel1
-            , <&pro_micro 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel2
-            , <&pro_micro 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // discharge
-            ;
-    };
-};
-
-&adc {
-  #address-cells = <1>;
-  #size-cells = <0>;
-  status = "okay";
-
-  channel@1 {
-    reg = <1>;
-    zephyr,gain = "ADC_GAIN_1_6";
-    zephyr,reference = "ADC_REF_INTERNAL";
-    zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)>;
-    zephyr,resolution = <10>;
-    zephyr,input-positive = <NRF_SAADC_AIN0>; /* P0.02 */
-  };
 };

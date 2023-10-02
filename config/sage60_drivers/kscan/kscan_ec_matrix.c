@@ -295,7 +295,7 @@ static const struct kscan_driver_api kscan_ec_matrix_api = {
                 GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 7),                               \
             },                                                                              \
         .discharge = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 8),                          \
-        .adc_channel = ADC_DT_SPEC_INST_GET_BY_IDX(inst, 1),                                \
+        .adc_channel = ADC_DT_SPEC_INST_GET(inst),                                          \
         .press_point = DT_INST_PROP(inst, press_point),                                     \
         .release_point = DT_INST_PROP(inst, release_point),                                 \
         .active_polling_interval_ms = DT_INST_PROP(inst, active_polling_interval_ms),       \
