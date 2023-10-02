@@ -17,3 +17,7 @@ config ZMK_SPLIT
 	default y
 
 endif
+
+config ZMK_KSCAN_DIRECT_POLLING
+	bool
+	default n
