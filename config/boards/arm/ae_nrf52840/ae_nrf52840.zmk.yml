@@ -7,3 +7,4 @@ outputs:
   - usb
   - ble
 url: https://akizukidenshi.com/catalog/g/gK-17484/
+exposes: [pro_micro]

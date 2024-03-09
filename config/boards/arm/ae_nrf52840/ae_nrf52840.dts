@@ -12,7 +12,7 @@
 / {
 
 	model = "AE NRF52840";
-	compatible = "adafruit,feather-nrf52840-zmk";
+	compatible = "adafruit,ae_nrf52840";
 
 	chosen {
 		zephyr,code-partition = &code_partition;
@@ -35,8 +35,7 @@
 
 	vbatt: vbatt {
 		compatible = "zmk,battery-voltage-divider";
-		label = "VBATT";
-		io-channels = <&adc 5>;
+		io-channels = <&adc 0>;
 		output-ohms = <100000>;
 		full-ohms = <(100000 + 100000)>;
 	};
@@ -114,11 +113,9 @@
 		#size-cells = <1>;
 
 		sd_partition: partition@0 {
-			label = "softdevice";
 			reg = <0x00000000 0x00026000>;
 		};
 		code_partition: partition@26000 {
-			label = "code_partition";
 			reg = <0x00026000 0x000c6000>;
 		};
 
@@ -132,12 +129,10 @@
 			* if enabled.
 			*/
 		storage_partition: partition@ec000 {
-			label = "storage";
 			reg = <0x000ec000 0x00008000>;
 		};
 
 		boot_partition: partition@f4000 {
-			label = "adafruit_boot";
 			reg = <0x000f4000 0x0000c000>;
 		};
 	};
@@ -148,6 +143,5 @@
 	status = "okay";
 	cdc_acm_uart: cdc_acm_uart {
 		compatible = "zephyr,cdc-acm-uart";
-		label = "CDC_ACM_0";
 	};
 };
