@@ -18,38 +18,6 @@
 };
 
 / {
-    macros {
-        password: password {
-            label = "password";
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            wait-ms = <10>;
-            tap-ms = <10>;
-            bindings
-                = <&macro_press &kp LSHFT>
-                , <&macro_tap &kp S>
-                , <&macro_release &kp LSHFT>
-                , <&macro_tap &kp O>
-                , <&macro_press &kp LSHFT>
-                , <&macro_tap &kp R>
-                , <&macro_release &kp LSHFT>
-                , <&macro_tap &kp N9>
-                , <&macro_tap &kp N3>
-                , <&macro_press &kp LSHFT>
-                , <&macro_tap &kp L>
-                , <&macro_release &kp LSHFT>
-                , <&macro_tap &kp A>
-                , <&macro_tap &kp J>
-                , <&macro_tap &kp C>
-                , <&macro_press &kp LSHFT>
-                , <&macro_tap &kp M>
-                , <&macro_release &kp LSHFT>
-                ;
-        };
-    };
-};
-
-/ {
 
     conditional_layers {
         compatible = "zmk,conditional-layers";
@@ -73,8 +41,8 @@
 &kp ESC   &kp N1 &kp N2   &kp N3   &kp N4    &kp N5 &none     &none      &kp N6 &kp N7    &kp N8    &kp N9   &kp N0   &kp MINUS
 &kp TAB   &kp Q  &kp W    &kp E    &kp R     &kp T  &kp LPAR  &kp RPAR   &kp Y  &kp U     &kp I     &kp O    &kp P    &kp PIPE
 &kp LCTRL &kp A  &kp S    &kp D    &kp F     &kp G  &kp LBRC  &kp RBRC   &kp H  &kp J     &kp K     &kp L    &kp SEMI &kp SQT
-&kp LSHFT &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp RSHFT
-&none     &none  &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE  &kp ENTER &lt RAISE LANG1   &kp RALT  &kp RGUI  &none    &none
+&kp Z &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp Y
+&none &none &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE &none &none &kp ENTER &lt RAISE LANG1 &kp RALT &kp RGUI &none &none
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
@@ -92,8 +60,8 @@
 &kp ESC   &kp N1 &kp N2   &kp N3   &kp N4    &kp N5 &none     &none      &kp N6 &kp N7    &kp N8    &kp N9   &kp N0   &kp MINUS
 &kp TAB   &kp Q  &kp W    &kp E    &kp R     &kp T  &kp LPAR  &kp RPAR   &kp Y  &kp U     &kp I     &kp O    &kp P    &kp PIPE
 &kp LCTRL &kp A  &kp S    &kp D    &kp F     &kp G  &kp LBRC  &kp RBRC   &kp H  &kp J     &kp K     &kp L    &kp SEMI &kp SQT
-&kp LSHFT &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp RSHFT
-&none     &none  &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE  &kp ENTER &lt RAISE LANG1   &kp RALT  &kp RGUI  &none    &none
+&kp X &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp V
+&none &none &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE &none &none &kp ENTER &lt RAISE LANG1 &kp RALT &kp RGUI &none &none
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
         };
@@ -109,8 +77,8 @@
 &kp ESC   &kp N1 &kp N2   &kp N3   &kp N4    &kp N5 &none     &none      &kp N6 &kp N7    &kp N8    &kp N9   &kp N0   &kp MINUS
 &kp TAB   &kp Q  &kp W    &kp E    &kp R     &kp T  &kp LPAR  &kp RPAR   &kp Y  &kp U     &kp I     &kp O    &kp P    &kp PIPE
 &kp LCTRL &kp A  &kp S    &kp D    &kp F     &kp G  &kp LBRC  &kp RBRC   &kp H  &kp J     &kp K     &kp L    &kp SEMI &kp SQT
-&kp LSHFT &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp RSHFT
-&none     &none  &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE  &kp ENTER &lt RAISE LANG1   &kp RALT  &kp RGUI  &none    &none
+&kp T &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp N6
+&none &none &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE &none &none &kp ENTER &lt RAISE LANG1 &kp RALT &kp RGUI &none &none
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
@@ -124,11 +92,11 @@
 // |     | UNDO | CUT  | COPY  | PASTE |      |      |  |      |      |      |       |      |       |       |
 //              |      |       |       |      |      |  |      |      |      |       |      |
             bindings = <
-&kp ESC   &kp N1 &kp N2   &kp N3   &kp N4    &kp N5 &none     &none      &kp N6 &kp N7    &kp N8    &kp N9   &kp N0   &password
+&kp ESC   &kp N1 &kp N2   &kp N3   &kp N4    &kp N5 &none     &none      &kp N6 &kp N7    &kp N8    &kp N9   &kp N0   &kp MINUS
 &kp TAB   &kp Q  &kp W    &kp E    &kp R     &kp T  &kp LPAR  &kp RPAR   &kp Y  &kp U     &kp I     &kp O    &kp P    &kp PIPE
 &kp LCTRL &kp A  &kp S    &kp D    &kp F     &kp G  &kp LBRC  &kp RBRC   &kp H  &kp J     &kp K     &kp L    &kp SEMI &kp SQT
-&kp LSHFT &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp RSHFT
-&none     &none  &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE  &kp ENTER &lt RAISE LANG1   &kp RALT  &kp RGUI  &none    &none
+&kp F &kp Z  &kp X    &kp C    &kp V     &kp B  &kp LBKT  &kp RBKT   &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp N9
+&none &none &kp LGUI &kp LALT &lt LOWER LANG2 &kp SPACE &none &none &kp ENTER &lt RAISE LANG1 &kp RALT &kp RGUI &none &none
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
