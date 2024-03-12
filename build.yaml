@@ -23,4 +23,5 @@ include:
   - board: ae_nrf52840
     shield: sage60_ec_right
     cmake-args: -DZEPHYR_EXTRA_MODULES="${GITHUB_WORKSPACE}/config/sage60_drivers/"
-
+  - board: ae_nrf52840
+    shield: settings_reset
