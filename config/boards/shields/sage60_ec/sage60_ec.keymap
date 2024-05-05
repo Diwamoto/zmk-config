@@ -27,23 +27,7 @@
             tap-ms = <10>;
             bindings
                 = <&macro_press &kp LSHFT>
-                , <&macro_tap &kp S>
-                , <&macro_release &kp LSHFT>
-                , <&macro_tap &kp O>
-                , <&macro_press &kp LSHFT>
-                , <&macro_tap &kp R>
-                , <&macro_release &kp LSHFT>
-                , <&macro_tap &kp N9>
-                , <&macro_tap &kp N3>
-                , <&macro_press &kp LSHFT>
-                , <&macro_tap &kp L>
-                , <&macro_release &kp LSHFT>
                 , <&macro_tap &kp A>
-                , <&macro_tap &kp J>
-                , <&macro_tap &kp C>
-                , <&macro_press &kp LSHFT>
-                , <&macro_tap &kp M>
-                , <&macro_release &kp LSHFT>
                 ;
         };
     };

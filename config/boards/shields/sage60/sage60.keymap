@@ -18,6 +18,24 @@
 };
 
 / {
+    macros {
+        password: password {
+            label = "password";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <10>;
+            tap-ms = <10>;
+            bindings
+                = <&macro_press &kp LSHFT>
+                , <&macro_tap &kp A>
+                ;
+        };
+    };
+};
+
+
+
+/ {
 
     conditional_layers {
         compatible = "zmk,conditional-layers";
