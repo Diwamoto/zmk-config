@@ -1,4 +1,0 @@
-name: sage60_drivers
-build:
-  cmake: .
-  kconfig: Kconfig

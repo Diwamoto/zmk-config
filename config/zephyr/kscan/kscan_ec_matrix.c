@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2023 diwamoto_
+ * Copyright (c) 2024 diwamoto_
  *
  * SPDX-License-Identifier: MIT
  */
@@ -138,7 +138,7 @@ static void kscan_ec_matrix_work_handler(struct k_work *work)
                     cfg->discharge.pin,
                     GPIO_INPUT | cfg->discharge.dt_flags);
             gpio_pin_set(cfg->rows[r].port, cfg->rows[r].pin, 0);
-            k_sleep(K_MSEC(10));
+            k_sleep(K_MSEC(2));
 
             int rc = adc_read(cfg->adc_channel.dev, adc_seq);
 
@@ -176,6 +176,7 @@ static void kscan_ec_matrix_work_handler(struct k_work *work)
             int cell = (r * COL_NUMS) + c;
             if (data->matrix_state[cell] != matrix_read[cell])
             {
+                LOG_INF("[=====CHANGED====] row: %d, col: %d", r, c);
                 data->matrix_state[cell] = matrix_read[cell];
                 // data->callback(data->dev, r, c, matrix_read[cell]);
             }
@@ -295,7 +296,7 @@ static const struct kscan_driver_api kscan_ec_matrix_api = {
                 GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 7),                               \
             },                                                                              \
         .discharge = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 8),                          \
-        .adc_channel = ADC_DT_SPEC_INST_GET(inst),                                          \
+        .adc_channel = ADC_CHANNEL_DT_SPEC_INST_GET(inst, 0),                               \
         .press_point = DT_INST_PROP(inst, press_point),                                     \
         .release_point = DT_INST_PROP(inst, release_point),                                 \
         .active_polling_interval_ms = DT_INST_PROP(inst, active_polling_interval_ms),       \
