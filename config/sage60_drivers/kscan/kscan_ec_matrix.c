@@ -18,8 +18,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #define DT_DRV_COMPAT zmk_kscan_ec_matrix
 
-#define ROW_NUMS 5
-#define COL_NUMS 6
+#define ROW_NUMS 2
+#define COL_NUMS 4
 #define MATRIX_CELLS (ROW_NUMS * COL_NUMS)
 #define SEL_NUMS 3
 
@@ -282,21 +282,18 @@ static const struct kscan_driver_api kscan_ec_matrix_api = {
     static const struct kscan_ec_matrix_config kscan_ec_matrix_config##inst = {               \
         .rows =                                                                             \
             {                                                                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 0),                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 1),                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 2),                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 3),                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 4),                               \
+                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, row_gpios, 0),                           \
+                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, row_gpios, 1),                           \
             },                                                                              \
         .cols = COL_PINS,                                                                   \
         .sels =                                                                             \
             {                                                                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 5),                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 6),                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 7),                               \
+                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, sel_gpios, 0),                           \
+                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, sel_gpios, 1),                           \
+                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, sel_gpios, 2),                           \
             },                                                                              \
-        .discharge = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, gpios, 8),                          \
-        .adc_channel = ADC_CHANNEL_DT_SPEC_INST_GET(inst, 0),                               \
+        .discharge = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, discharge_gpios, 0),                \
+        .adc_channel = ADC_DT_SPEC_INST_GET(inst),                                          \
         .press_point = DT_INST_PROP(inst, press_point),                                     \
         .release_point = DT_INST_PROP(inst, release_point),                                 \
         .active_polling_interval_ms = DT_INST_PROP(inst, active_polling_interval_ms),       \

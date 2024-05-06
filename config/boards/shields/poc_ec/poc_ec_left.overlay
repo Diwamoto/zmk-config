@@ -1,0 +1,43 @@
+/*
+ * Copyright (c) 2024 Diwamoto_
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "poc_ec.dtsi"
+
+/ {
+  chosen {
+    zmk,kscan = &kscan0;
+  };
+
+  kscan0: kscan_0 {
+    compatible = "zmk,kscan-ec-matrix";
+    label = "KSCAN";
+    io-channels = <&adc 0>;
+    row-gpios = <&pro_micro 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row0 D13
+      , <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row1 D12
+    ;
+
+    sel-gpios = <&pro_micro 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel0
+      , <&pro_micro 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel1
+      , <&pro_micro 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel2
+      ;
+    discharge-gpios = <&pro_micro 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // discharge
+	};
+};
+
+&adc {
+  #address-cells = <1>;
+  #size-cells = <0>;
+  status = "okay";
+
+  channel@1 {
+		reg = <1>;
+		zephyr,gain = "ADC_GAIN_1_6";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)>;
+		zephyr,resolution = <10>;
+		zephyr,input-positive = <NRF_SAADC_AIN0>; /* P0.04 */
+	};
+};

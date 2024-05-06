@@ -1,3 +1,0 @@
-config KSCAN_EC_MATRIX
-    bool "sage60 ec matrix driver"
-    default y

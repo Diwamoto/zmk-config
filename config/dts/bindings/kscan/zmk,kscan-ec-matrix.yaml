@@ -8,7 +8,13 @@ compatible: "zmk,kscan-ec-matrix"
 include: kscan.yaml
 
 properties:
-  gpios:
+  row-gpios:
+    type: phandle-array
+    required: true
+  sel-gpios:
+    type: phandle-array
+    required: true
+  discharge-gpios:
     type: phandle-array
     required: true
   io-channels:

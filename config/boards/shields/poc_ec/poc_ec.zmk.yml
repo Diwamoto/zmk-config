@@ -1,0 +1,10 @@
+file_format: "1"
+id: poc_ec
+name: Poc_EC
+type: shield
+requires: [pro_micro]
+features:
+  - keys
+siblings:
+  - poc_ec_left
+  - poc_ec_right
