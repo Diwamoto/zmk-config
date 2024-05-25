@@ -17,6 +17,12 @@ properties:
   discharge-gpios:
     type: phandle-array
     required: true
+  power-gpios:
+    type: phandle-array
+    required: true
+  mux-en-gpios:
+    type: phandle-array
+    required: true
   io-channels:
     type: phandle-array
     required: true

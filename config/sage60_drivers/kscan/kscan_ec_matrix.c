@@ -18,26 +18,23 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #define DT_DRV_COMPAT zmk_kscan_ec_matrix
 
-#define ROW_NUMS 2
-#define COL_NUMS 4
+#define ROW_NUMS 5
+#define COL_NUMS 6
 #define MATRIX_CELLS (ROW_NUMS * COL_NUMS)
 #define SEL_NUMS 3
 
-#define S1 1
-#define S2 2
-#define S3 3
-#define S4 4
-#define S5 5
-#define S6 6
-#define S7 7
-#define S8 8
-#define COL_PINS {S7, S5, S3, S8, S1, S2}
+#define WAIT_DISCHARGE()
+#define WAIT_CHARGE()
+
+#define COL_PINS {4, 6, 7, 5, 1, 0}
 
 struct kscan_ec_matrix_config
 {
     struct gpio_dt_spec rows[ROW_NUMS];
     struct gpio_dt_spec sels[SEL_NUMS];
     struct gpio_dt_spec discharge;
+    struct gpio_dt_spec power;
+    struct gpio_dt_spec mux_en;
     struct adc_dt_spec adc_channel;
     const uint8_t press_point;
     const uint8_t release_point;
@@ -106,82 +103,49 @@ static void kscan_ec_matrix_work_handler(struct k_work *work)
     const struct device *dev = data->dev;
     const struct kscan_ec_matrix_config *cfg = dev->config;
     struct adc_sequence *adc_seq = &data->adc_seq;
-    bool matrix_read[MATRIX_CELLS];
+    // bool matrix_read[MATRIX_CELLS];
 
-    for (int r = 0; r < ROW_NUMS; ++r)
-    {
-        for (int c = 0; c < COL_NUMS; ++c)
-        {
+    gpio_pin_set_dt(&cfg->power, 1);
 
-            // discharge capacitor
-            gpio_pin_configure(cfg->discharge.port,
-                            cfg->discharge.pin,
-                            GPIO_OUTPUT_INACTIVE | cfg->discharge.dt_flags);
-            k_sleep(K_MSEC(10));
-            
+    for (int c = 0; c < COL_NUMS; ++c){ 
+        for (int r = 0; r < ROW_NUMS; ++r) {
+
+            gpio_pin_configure_dt(&cfg->discharge, GPIO_OUTPUT);
+
             // select mux sel
             uint8_t ch = cfg->cols[c];
-            gpio_pin_set(cfg->sels[0].port, cfg->sels[0].pin, ch & 1);
-            gpio_pin_set(cfg->sels[1].port, cfg->sels[1].pin, ch & 2);
-            gpio_pin_set(cfg->sels[2].port, cfg->sels[2].pin, ch & 4);
-            k_sleep(K_MSEC(10));
+            gpio_pin_set_dt(&cfg->sels[0], ch & 1);
+            gpio_pin_set_dt(&cfg->sels[1], ch & 2);
+            gpio_pin_set_dt(&cfg->sels[2], ch & 4);
 
-            // clear all row pins 
+            // clear all row pins
             for (int r2 = 0; r2 < ROW_NUMS; ++r2)
             {
-                gpio_pin_set(cfg->rows[r2].port, cfg->rows[r2].pin, 0);
+                gpio_pin_set_dt(&cfg->rows[r2], 0);
             }
-            k_sleep(K_MSEC(10));
-            
+
+            const unsigned int lock = irq_lock();
+
             // charge capacitor
-            gpio_pin_configure(cfg->discharge.port,
-                    cfg->discharge.pin,
-                    GPIO_INPUT | cfg->discharge.dt_flags);
-            gpio_pin_set(cfg->rows[r].port, cfg->rows[r].pin, 0);
-            k_sleep(K_MSEC(2));
+            gpio_pin_configure_dt(&cfg->discharge, GPIO_INPUT);
+            gpio_pin_set_dt(&cfg->rows[r], 1);
 
+            // read key 
             int rc = adc_read(cfg->adc_channel.dev, adc_seq);
-
             if (rc != 0) {
                 LOG_ERR("Failed to read ADC: %d", rc);
                 return;
             }
 
-            int32_t sw_value = data->adc_raw;
-            
-            int cell = (r * COL_NUMS) + c;
+            int16_t sw_value = data->adc_raw;
 
-            if (sw_value >= cfg->press_point) {
-                matrix_read[cell] = true;
-                LOG_INF("[PRESS] row: %d, col: %d, sw_value: %d", r, c, sw_value);
-            } else if (sw_value <= cfg->release_point) {
-                matrix_read[cell] = false;
-                LOG_INF("[RELEASE] row: %d, col: %d, sw_value: %d", r, c, sw_value);
-            }
+            LOG_INF("row: %d, col: %d, value: %d", r, c, sw_value);
+            irq_unlock(lock);
 
-            // // これじゃだめなのかしら
-            // if (data->matrix_state[cell] != matrix_read[cell])
-            // {
-            //     data->matrix_state[cell] = matrix_read[cell];
-            //     data->callback(data->dev, r, c, matrix_read[cell]);
-            // }
         }
     }
 
-    // TODO: 二回回す意味ある？
-    for (int r = 0; r < ROW_NUMS; ++r)
-    {
-        for (int c = 0; c < COL_NUMS; ++c)
-        {
-            int cell = (r * COL_NUMS) + c;
-            if (data->matrix_state[cell] != matrix_read[cell])
-            {
-                LOG_INF("[=====CHANGED====] row: %d, col: %d", r, c);
-                data->matrix_state[cell] = matrix_read[cell];
-                // data->callback(data->dev, r, c, matrix_read[cell]);
-            }
-        }
-    }
+    gpio_pin_set_dt(&cfg->power, 0);
 }
 
 static int kscan_ec_matrix_activity_event_handler(const struct device *dev, const zmk_event_t *eh)
@@ -216,41 +180,20 @@ static int kscan_ec_matrix_activity_event_handler(const struct device *dev, cons
 
 static int kscan_ec_matrix_init(const struct device *dev)
 {
-    LOG_DBG("KSCAN init");
+    LOG_INF("KSCAN init");
     struct kscan_ec_matrix_data *data = dev->data;
     const struct kscan_ec_matrix_config *cfg = dev->config;
     data->dev = dev;
 
+    // enable mux
+    gpio_pin_configure_dt(&cfg->mux_en, GPIO_OUTPUT_INACTIVE);
+
+    // power on
+    gpio_pin_configure_dt(&cfg->power, GPIO_OUTPUT_ACTIVE);
+
     // discharge mode
-    gpio_pin_configure(cfg->discharge.port,
-                    cfg->discharge.pin,
-                    GPIO_OUTPUT_INACTIVE | cfg->discharge.dt_flags);
-    gpio_pin_set(cfg->discharge.port, cfg->discharge.pin, 0);
+    gpio_pin_configure_dt(&cfg->discharge, GPIO_OUTPUT_INACTIVE);
 
-    // init rows
-    for (int i = 0; i < ROW_NUMS; ++i)
-    {
-        gpio_pin_configure(cfg->rows[i].port,
-                           cfg->rows[i].pin,
-                           GPIO_OUTPUT_INACTIVE | cfg->rows[i].dt_flags);
-        gpio_pin_set(cfg->rows[i].port, cfg->rows[i].pin, 0);
-    }
-
-    // init mux sel pins
-    for (int i = 0; i < SEL_NUMS; ++i)
-    {
-        gpio_pin_configure(cfg->sels[i].port,
-                           cfg->sels[i].pin,
-                           GPIO_OUTPUT_INACTIVE | cfg->sels[i].dt_flags);
-    }
-
-    gpio_pin_configure(cfg->discharge.port,
-                    cfg->discharge.pin,
-                    GPIO_INPUT | cfg->discharge.dt_flags);
-
-    k_timer_init(&data->poll_timer, kscan_ec_matrix_timer_handler, NULL);
-    k_work_init(&data->poll, kscan_ec_matrix_work_handler);
-    
     int rc = 0;
 
     rc = adc_channel_setup_dt(&cfg->adc_channel);
@@ -268,6 +211,20 @@ static int kscan_ec_matrix_init(const struct device *dev)
         LOG_ERR("ADC sequence init error %d", rc);
     }
 
+    // init rows
+    for (int i = 0; i < ROW_NUMS; ++i)
+    {
+        gpio_pin_configure_dt(&cfg->rows[i], GPIO_OUTPUT_INACTIVE);
+    }
+
+    // init mux sels
+    for (int i = 0; i < SEL_NUMS; ++i)
+    {
+        gpio_pin_configure_dt(&cfg->sels[i], GPIO_OUTPUT);
+    }
+
+    k_timer_init(&data->poll_timer, kscan_ec_matrix_timer_handler, NULL);
+    k_work_init(&data->poll, kscan_ec_matrix_work_handler);
 
     return 0;
 }
@@ -293,6 +250,8 @@ static const struct kscan_driver_api kscan_ec_matrix_api = {
                 GPIO_DT_SPEC_INST_GET_BY_IDX(inst, sel_gpios, 2),                           \
             },                                                                              \
         .discharge = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, discharge_gpios, 0),                \
+        .power = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, power_gpios, 0),                        \
+        .mux_en = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, mux_en_gpios, 0),                      \
         .adc_channel = ADC_DT_SPEC_INST_GET(inst),                                          \
         .press_point = DT_INST_PROP(inst, press_point),                                     \
         .release_point = DT_INST_PROP(inst, release_point),                                 \

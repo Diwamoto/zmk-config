@@ -14,16 +14,20 @@
   kscan0: kscan_0 {
     compatible = "zmk,kscan-ec-matrix";
     label = "KSCAN";
-    io-channels = <&adc 0>;
-    row-gpios = <&pro_micro 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row0 D13
-      , <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row1 D12
+    io-channels = <&adc 1>;
+    row-gpios = <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row0 D12
+      , <&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row1 D11
+      , <&pro_micro 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row2 D10
+      , <&pro_micro 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row3 D9
+      , <&pro_micro 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row4 D8
     ;
-
-    sel-gpios = <&pro_micro 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel0
-      , <&pro_micro 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel1
-      , <&pro_micro 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel2
+    sel-gpios = <&pro_micro 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel0
+      , <&pro_micro 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel1
+      , <&pro_micro 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel2
       ;
-    discharge-gpios = <&pro_micro 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // discharge
+    discharge-gpios = <&pro_micro 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // discharge
+    power-gpios = <&pro_micro 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // power
+    mux-en-gpios = <&pro_micro 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // mux_en
 	};
 };
 
