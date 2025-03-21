@@ -3,7 +3,7 @@
 *
 * SPDX-License-Identifier: MIT
  */
-
+// https://akizukidenshi.com/goodsaffix/AE-NRF52840.pdf
 / {
 	pro_micro: connector {
 		compatible = "arduino-pro-micro";
