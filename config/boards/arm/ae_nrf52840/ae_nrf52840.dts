@@ -22,19 +22,6 @@
 		zmk,battery = &vbatt;
 	};
 
-	/* 
-	arduino_adc: analog-connector {
-		compatible = "arduino,uno-adc";
-		#io-channel-cells = <1>;
-		io-channel-map = <0 &adc 1>,	
-						 <1 &adc 2>,	
-						 <2 &adc 4>,	
-						 <3 &adc 5>,	
-						 <4 &adc 6>,	
-						 <5 &adc 7>;	
-	};
-	*/
-
 	vbatt: vbatt {
 		compatible = "zmk,battery-voltage-divider";
 		io-channels = <&adc 3>;
