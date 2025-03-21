@@ -5,6 +5,7 @@ type: shield
 requires: [pro_micro]
 features:
   - keys
+  - studio
 siblings:
   - sage60_ec_left
   - sage60_ec_right

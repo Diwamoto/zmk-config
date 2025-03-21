@@ -11,50 +11,36 @@
 #include <zephyr/drivers/adc.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
-#include <zmk/event_manager.h>
-#include <zmk/events/activity_state_changed.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #define DT_DRV_COMPAT zmk_kscan_ec_matrix
-
-#define ROW_NUMS 5
-#define COL_NUMS 6
-#define MATRIX_CELLS (ROW_NUMS * COL_NUMS)
-#define SEL_NUMS 3
-
-#define WAIT_DISCHARGE()
-#define WAIT_CHARGE()
-
-#define COL_PINS {4, 6, 7, 5, 1, 0}
+#define SAMPLE_INTERVAL K_MSEC(10)
 
 struct kscan_ec_matrix_config
 {
-    struct gpio_dt_spec rows[ROW_NUMS];
-    struct gpio_dt_spec sels[SEL_NUMS];
+    const struct gpio_dt_spec *rows;
+    const struct gpio_dt_spec *sels;
     struct gpio_dt_spec discharge;
     struct gpio_dt_spec power;
     struct gpio_dt_spec mux_en;
     struct adc_dt_spec adc_channel;
-    const uint8_t press_point;
-    const uint8_t release_point;
-    const uint8_t cols[COL_NUMS];
-    const uint16_t matrix_relax_us;
-    const uint16_t adc_read_settle_us;
-    const uint16_t active_polling_interval_ms;
-    const uint16_t idle_polling_interval_ms;
-    const uint16_t sleep_polling_interval_ms;
+    const uint16_t press_point;
+    const uint16_t release_point;
+    const uint8_t *cols;
+    uint8_t row_num;
+    uint8_t col_num;
+    uint8_t sel_num;
 };
 
 struct kscan_ec_matrix_data
 {
+    struct k_work_delayable work;
     kscan_callback_t callback;
-    struct k_timer poll_timer;
-    struct k_work poll;
-    bool matrix_state[MATRIX_CELLS];
+    bool matrix_state[32][32];
     const struct device *dev;
+    uint16_t adc_raw;
     struct adc_sequence adc_seq;
-    int16_t adc_raw;
 };
 
 static int kscan_ec_matrix_configure(const struct device *dev, kscan_callback_t callback)
@@ -74,108 +60,77 @@ static int kscan_ec_matrix_enable(const struct device *dev)
 {
     LOG_DBG("KSCAN API enable");
     struct kscan_ec_matrix_data *data = dev->data;
-    const struct kscan_ec_matrix_config *cfg = dev->config;
-    k_timer_start(&data->poll_timer,
-                  K_MSEC(cfg->active_polling_interval_ms),
-                  K_MSEC(cfg->active_polling_interval_ms));
-    return 0;
+    return k_work_schedule(&data->work, K_NO_WAIT);
 }
 
 static int kscan_ec_matrix_disable(const struct device *dev)
 {
     LOG_DBG("KSCAN API disable");
     struct kscan_ec_matrix_data *data = dev->data;
-    k_timer_stop(&data->poll_timer);
-    return 0;
-}
-
-static void kscan_ec_matrix_timer_handler(struct k_timer *timer)
-{
-    struct kscan_ec_matrix_data *data =
-        CONTAINER_OF(timer, struct kscan_ec_matrix_data, poll_timer);
-    k_work_submit(&data->poll);
+    return k_work_cancel_delayable(&data->work);
 }
 
 static void kscan_ec_matrix_work_handler(struct k_work *work)
 {
-
-    struct kscan_ec_matrix_data *data = CONTAINER_OF(work, struct kscan_ec_matrix_data, poll);
+    struct k_work_delayable *dwork = CONTAINER_OF(work, struct k_work_delayable, work);
+    struct kscan_ec_matrix_data *data = CONTAINER_OF(dwork, struct kscan_ec_matrix_data, work);
     const struct device *dev = data->dev;
     const struct kscan_ec_matrix_config *cfg = dev->config;
-    struct adc_sequence *adc_seq = &data->adc_seq;
-    // bool matrix_read[MATRIX_CELLS];
 
-    gpio_pin_set_dt(&cfg->power, 1);
+    for (int c = 0; c < cfg->col_num; ++c){
 
-    for (int c = 0; c < COL_NUMS; ++c){ 
-        for (int r = 0; r < ROW_NUMS; ++r) {
-
-            gpio_pin_configure_dt(&cfg->discharge, GPIO_OUTPUT);
+        for (int r = 0; r < cfg->row_num; ++r) {
 
             // select mux sel
             uint8_t ch = cfg->cols[c];
             gpio_pin_set_dt(&cfg->sels[0], ch & 1);
-            gpio_pin_set_dt(&cfg->sels[1], ch & 2);
-            gpio_pin_set_dt(&cfg->sels[2], ch & 4);
-
+            gpio_pin_set_dt(&cfg->sels[1], (ch & 2) >> 1);
+            gpio_pin_set_dt(&cfg->sels[2], (ch & 4) >> 2);
+            
             // clear all row pins
-            for (int r2 = 0; r2 < ROW_NUMS; ++r2)
+            for (int r2 = 0; r2 < cfg->row_num; ++r2)
             {
                 gpio_pin_set_dt(&cfg->rows[r2], 0);
             }
-
-            const unsigned int lock = irq_lock();
 
             // charge capacitor
             gpio_pin_configure_dt(&cfg->discharge, GPIO_INPUT);
             gpio_pin_set_dt(&cfg->rows[r], 1);
 
             // read key 
-            int rc = adc_read(cfg->adc_channel.dev, adc_seq);
-            if (rc != 0) {
-                LOG_ERR("Failed to read ADC: %d", rc);
+            int err = adc_read(cfg->adc_channel.dev, &data->adc_seq);
+            if (err != 0) {
+                LOG_ERR("Failed to read ADC: %d", err);
                 return;
             }
 
-            int16_t sw_value = data->adc_raw;
+            // LOG_DBG("Row %d, Col %d, ADC raw value: %d", r, c, data->adc_raw);
 
-            LOG_INF("row: %d, col: %d, value: %d", r, c, sw_value);
-            irq_unlock(lock);
-
+            // bool old_state = data->matrix_state[r][c];
+            if (data->adc_raw > 1000) {
+                LOG_INF("row: %d, col: %d val: %d", r, c, data->adc_raw);
+            }
+            // if (data->adc_raw > cfg->press_point && !old_state)
+            // {
+            //     LOG_INF("Key press detected at [%d,%d] value=%d", r, c, data->adc_raw);
+            //     data->matrix_state[r][c] = true;
+            //     if (data->callback)
+            //     {
+            //         // data->callback(dev, r, c, data->matrix_state[r][c]);
+            //     }
+            // }
+            // else if (data->adc_raw < cfg->release_point && old_state)
+            // {
+            //     data->matrix_state[r][c] = false;
+            //     if (data->callback)
+            //     {
+            //         // data->callback(dev, r, c, data->matrix_state[r][c]);
+            //     }
+            // }
         }
     }
 
-    gpio_pin_set_dt(&cfg->power, 0);
-}
-
-static int kscan_ec_matrix_activity_event_handler(const struct device *dev, const zmk_event_t *eh)
-{
-    struct zmk_activity_state_changed *ev = as_zmk_activity_state_changed(eh);
-    if (ev == NULL)
-    {
-        return -ENOTSUP;
-    }
-    struct kscan_ec_matrix_data *data = dev->data;
-    const struct kscan_ec_matrix_config *cfg = dev->config;
-    uint16_t poll_interval;
-    switch (ev->state)
-    {
-    case ZMK_ACTIVITY_ACTIVE:
-        poll_interval = cfg->active_polling_interval_ms;
-        break;
-    case ZMK_ACTIVITY_IDLE:
-        poll_interval = cfg->idle_polling_interval_ms;
-        break;
-    case ZMK_ACTIVITY_SLEEP:
-        poll_interval = cfg->sleep_polling_interval_ms;
-        break;
-    default:
-        LOG_WRN("Unhandled activity state: %d", ev->state);
-        return -EINVAL;
-    }
-    LOG_DBG("Setting poll interval to %d", poll_interval);
-    k_timer_start(&data->poll_timer, K_MSEC(10), K_MSEC(10));
-    return 0;
+    k_work_schedule(&data->work, SAMPLE_INTERVAL);
 }
 
 static int kscan_ec_matrix_init(const struct device *dev)
@@ -186,94 +141,101 @@ static int kscan_ec_matrix_init(const struct device *dev)
     data->dev = dev;
 
     // enable mux
-    gpio_pin_configure_dt(&cfg->mux_en, GPIO_OUTPUT_INACTIVE);
+    int ret = gpio_pin_configure_dt(&cfg->mux_en, GPIO_OUTPUT);
+    if (ret < 0) return ret;
+    gpio_pin_set_dt(&cfg->mux_en, 0);
 
     // power on
-    gpio_pin_configure_dt(&cfg->power, GPIO_OUTPUT_ACTIVE);
+    ret = gpio_pin_configure_dt(&cfg->power, GPIO_OUTPUT);
+    if (ret < 0) return ret;
+    gpio_pin_set_dt(&cfg->power, 1);
 
     // discharge mode
-    gpio_pin_configure_dt(&cfg->discharge, GPIO_OUTPUT_INACTIVE);
-
-    int rc = 0;
-
-    rc = adc_channel_setup_dt(&cfg->adc_channel);
-    if (rc < 0) {
-        LOG_ERR("ADC channel setup error %d", rc);
-    }
-
-    data->adc_seq = (struct adc_sequence){
-      .buffer = &data->adc_raw,
-      .buffer_size = sizeof(data->adc_raw),
-    };
-
-    rc = adc_sequence_init_dt(&cfg->adc_channel, &data->adc_seq);
-    if (rc < 0) {
-        LOG_ERR("ADC sequence init error %d", rc);
-    }
+    ret = gpio_pin_configure_dt(&cfg->discharge, GPIO_OUTPUT);
+    if (ret < 0) return ret;
+    gpio_pin_set_dt(&cfg->discharge, 0);
 
     // init rows
-    for (int i = 0; i < ROW_NUMS; ++i)
+    for (int i = 0; i < cfg->row_num; i++)
     {
-        gpio_pin_configure_dt(&cfg->rows[i], GPIO_OUTPUT_INACTIVE);
+        ret = gpio_pin_configure_dt(&cfg->rows[i], GPIO_OUTPUT);
+        if (ret < 0) return ret;
+        gpio_pin_set_dt(&cfg->rows[i], 0);
     }
 
     // init mux sels
-    for (int i = 0; i < SEL_NUMS; ++i)
+    for (int i = 0; i < cfg->sel_num; ++i)
     {
-        gpio_pin_configure_dt(&cfg->sels[i], GPIO_OUTPUT);
+        ret = gpio_pin_configure_dt(&cfg->sels[i], GPIO_OUTPUT);
+        if (ret < 0) return ret;
+        gpio_pin_set_dt(&cfg->sels[i], 0);
     }
 
-    k_timer_init(&data->poll_timer, kscan_ec_matrix_timer_handler, NULL);
-    k_work_init(&data->poll, kscan_ec_matrix_work_handler);
+    // Configure ADC
+    if (!device_is_ready(cfg->adc_channel.dev)) {
+        return -ENODEV;
+    }
+
+    data->adc_seq = (struct adc_sequence){
+        .channels = BIT(cfg->adc_channel.channel_id),
+        .buffer = &data->adc_raw,
+        .buffer_size = sizeof(data->adc_raw),
+        .resolution = cfg->adc_channel.resolution,
+        .calibrate = true,
+    };
+     
+    ret = adc_channel_setup_dt(&cfg->adc_channel);
+    if (ret < 0) {
+        LOG_ERR("ADC channel setup error %d", ret);
+    }
+
+    k_work_init_delayable(&data->work, kscan_ec_matrix_work_handler);
 
     return 0;
 }
+
 static const struct kscan_driver_api kscan_ec_matrix_api = {
     .config = kscan_ec_matrix_configure,
     .enable_callback = kscan_ec_matrix_enable,
     .disable_callback = kscan_ec_matrix_disable,
 };
 
-#define CREATE_KSCAN_EC_MATRIX(inst)                                                         \
-    static struct kscan_ec_matrix_data kscan_ec_matrix_data##inst;                          \
-    static const struct kscan_ec_matrix_config kscan_ec_matrix_config##inst = {               \
-        .rows =                                                                             \
-            {                                                                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, row_gpios, 0),                           \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, row_gpios, 1),                           \
-            },                                                                              \
-        .cols = COL_PINS,                                                                   \
-        .sels =                                                                             \
-            {                                                                               \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, sel_gpios, 0),                           \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, sel_gpios, 1),                           \
-                GPIO_DT_SPEC_INST_GET_BY_IDX(inst, sel_gpios, 2),                           \
-            },                                                                              \
-        .discharge = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, discharge_gpios, 0),                \
-        .power = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, power_gpios, 0),                        \
-        .mux_en = GPIO_DT_SPEC_INST_GET_BY_IDX(inst, mux_en_gpios, 0),                      \
+#define KSCAN_EC_MATRIX_INIT(inst)                                                           \
+    static const struct gpio_dt_spec row_pins_##inst[] = {                                  \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 0),                           \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 1),                           \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 2),                           \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 3),                           \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 4),                           \
+    };                                                                                      \
+    static const struct gpio_dt_spec sel_pins_##inst[] = {                                  \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), sel_gpios, 0),                           \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), sel_gpios, 1),                           \
+        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), sel_gpios, 2),                           \
+    };                                                                                      \
+    static const uint8_t col_channels_##inst[] = DT_INST_PROP(inst, col_channels);          \
+    static const struct kscan_ec_matrix_config config_##inst = {                              \
+        .rows = row_pins_##inst,                                                            \
+        .sels = sel_pins_##inst,                                                            \
+        .cols = col_channels_##inst,                                                        \
+        .discharge = GPIO_DT_SPEC_GET(DT_DRV_INST(inst), discharge_gpios),                  \
+        .power = GPIO_DT_SPEC_GET(DT_DRV_INST(inst), power_gpios),                          \
+        .mux_en = GPIO_DT_SPEC_GET(DT_DRV_INST(inst), mux_en_gpios),                        \
         .adc_channel = ADC_DT_SPEC_INST_GET(inst),                                          \
+        .row_num = ARRAY_SIZE(row_pins_##inst),                                             \
+        .col_num = ARRAY_SIZE(col_channels_##inst),                                         \
+        .sel_num = ARRAY_SIZE(sel_pins_##inst),                                             \
         .press_point = DT_INST_PROP(inst, press_point),                                     \
         .release_point = DT_INST_PROP(inst, release_point),                                 \
-        .active_polling_interval_ms = DT_INST_PROP(inst, active_polling_interval_ms),       \
-        .idle_polling_interval_ms = DT_INST_PROP(inst, idle_polling_interval_ms),           \
-        .sleep_polling_interval_ms = DT_INST_PROP(inst, sleep_polling_interval_ms),         \
     };                                                                                      \
-    static int kscan_ec_matrix_activity_event_handler_wrapper##inst(const zmk_event_t *eh)  \
-    {                                                                                       \
-        const struct device *dev = DEVICE_DT_INST_GET(inst);                                \
-        return kscan_ec_matrix_activity_event_handler(dev, eh);                             \
-    }                                                                                       \
-    ZMK_LISTENER(kscan_ec_matrix##inst,                                                     \
-                 kscan_ec_matrix_activity_event_handler_wrapper##inst);                     \
-    ZMK_SUBSCRIPTION(kscan_ec_matrix##inst, zmk_activity_state_changed);                    \
+    static struct kscan_ec_matrix_data data_##inst;                                         \
     DEVICE_DT_INST_DEFINE(inst,                                                             \
-                          kscan_ec_matrix_init,                                             \
+                          &kscan_ec_matrix_init,                                             \
                           NULL,                                                             \
-                          &kscan_ec_matrix_data##inst,                                      \
-                          &kscan_ec_matrix_config##inst,                                     \
-                          APPLICATION,                                                      \
-                          CONFIG_APPLICATION_INIT_PRIORITY,                                 \
+                          &data_##inst,                                                     \
+                          &config_##inst,                                                    \
+                          POST_KERNEL,                                                      \
+                          CONFIG_KSCAN_INIT_PRIORITY,                                       \
                           &kscan_ec_matrix_api);
 
-DT_INST_FOREACH_STATUS_OKAY(CREATE_KSCAN_EC_MATRIX)
+DT_INST_FOREACH_STATUS_OKAY(KSCAN_EC_MATRIX_INIT)

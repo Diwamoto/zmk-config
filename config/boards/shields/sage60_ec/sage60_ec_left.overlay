@@ -6,40 +6,39 @@
 
 #include "sage60_ec.dtsi"
 
-/ {
-  chosen {
-    zmk,kscan = &kscan0;
-  };
-
-kscan0: kscan_0 {
-    compatible = "zmk,kscan-ec-matrix";
-    label = "KSCAN";
-    io-channels = <&adc 1>;
-    gpios
-		= <&pro_micro 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row0
-		, <&pro_micro 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row1
-		, <&pro_micro 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row2
-		, <&pro_micro 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row3
-		, <&pro_micro 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // row4
-		, <&pro_micro 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel0
-		, <&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel1
-		, <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // sel2
-		, <&pro_micro 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // discharge
-        ;
-    };
+&kscan0 {
+    discharge-gpios = <&pro_micro 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; /* D22 SDA */
+	power-gpios = <&pro_micro 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;      /* D25 MOSI */
+	mux-en-gpios = <&pro_micro 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;     /* D24 MISO */
+	row-gpios = <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,       /* D12 */
+				<&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,       /* D11 */
+				<&pro_micro 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>, 	    /* D10 */
+				<&pro_micro 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,       /* D9 */
+				<&pro_micro 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;       /* D6 */
+	sel-gpios = <&pro_micro 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,        /* D1 RXD */
+					<&pro_micro 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,   /* D0 TXD */
+					<&pro_micro 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;   /* D2 (NFC2) */
+	col-channels = <4 6 7 5 1 0>;
+	press-point = <1000>;
+	release-point = <1000>;
+	io-channels = <&adc 0>;
 };
 
 &adc {
-  #address-cells = <1>;
-  #size-cells = <0>;
-  status = "okay";
-
-  channel@1 {
-		reg = <1>;
+	#address-cells = <1>;
+    #size-cells = <0>;
+	status = "okay";
+	channel@0 {
+		reg = <0>;
 		zephyr,gain = "ADC_GAIN_1_6";
 		zephyr,reference = "ADC_REF_INTERNAL";
-		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)>;
-		zephyr,resolution = <10>;
-		zephyr,input-positive = <NRF_SAADC_AIN1>; /* P0.04 */
+		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 50)>;
+		zephyr,resolution = <12>;
+		zephyr,input-positive = <NRF_SAADC_AIN7>; /* P0.02 */
 	};
 };
+/*
+NRF_SAADC_AIN0 →　A2
+NRF_SAADC_AIN1 →　A2
+
+ */

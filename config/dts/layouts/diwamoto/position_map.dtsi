@@ -4,4 +4,10 @@
 
         complete;
     };
+
+    layouts_diwamoto_sage60_ec_position_map: layouts_diwamoto_sage60_ec_position_map {
+        compatible = "zmk,physical-layout-position-map";
+
+        complete;
+    };
 };
