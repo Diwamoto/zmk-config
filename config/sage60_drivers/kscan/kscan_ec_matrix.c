@@ -204,9 +204,6 @@ static const struct kscan_driver_api kscan_ec_matrix_api = {
     static const struct gpio_dt_spec row_pins_##inst[] = {                                  \
         GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 0),                           \
         GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 1),                           \
-        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 2),                           \
-        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 3),                           \
-        GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), row_gpios, 4),                           \
     };                                                                                      \
     static const struct gpio_dt_spec sel_pins_##inst[] = {                                  \
         GPIO_DT_SPEC_GET_BY_IDX(DT_DRV_INST(inst), sel_gpios, 0),                           \

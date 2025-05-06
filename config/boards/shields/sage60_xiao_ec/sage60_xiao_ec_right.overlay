@@ -1,0 +1,30 @@
+/*
+* Copyright (c) 2023 Diwamoto_
+*
+* SPDX-License-Identifier: MIT
+*/
+
+#include "sage60_xiao_ec.dtsi"
+
+&default_transform {
+	col-offset = <7>;
+};
+	
+&kscan0 {
+    discharge-gpios = <&xiao_d 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; /* D3 */
+	power-gpios = <&xiao_d 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;    /* D10 */
+	mux-en-gpios = <&xiao_d 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;    /* D9 */
+	row-gpios = <&xiao_d 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,       /* D1 */
+				<&xiao_d 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;       /* D2 */
+	sel-gpios = <&xiao_d 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,       /* D4 */
+					<&xiao_d 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,   /* D5 */
+					<&xiao_d 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;   /* D6 */
+	col-channels = <4 6 7 5 1 0>;
+	press-point = <1000>;
+	release-point = <1000>;
+	io-channels = <&adc 0>;
+};
+
+&xiao_serial { status = "disabled"; };
+&xiao_i2c { status = "disabled"; };
+&uart0 { status = "disabled";};

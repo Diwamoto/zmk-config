@@ -1,0 +1,44 @@
+# mx
+
+west build -s /workspaces/zmk/app \
+    -d build/right -b ae_nrf52840 -S studio-rpc-usb-uart -- \
+    -DSHIELD=sage60_right -DZMK_CONFIG="/workspaces/zmk-config/config" \
+    -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n &&\
+west build -s /workspaces/zmk/app \
+    -d build/left -b ae_nrf52840 -S studio-rpc-usb-uart -- \
+    -DSHIELD=sage60_left -DZMK_CONFIG="/workspaces/zmk-config/config" \
+    -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n
+
+
+# ec
+
+rm -rf build  &&\
+west build -p always -s /workspaces/zmk/app \
+    -d build/ec_right -b ae_nrf52840 -- \
+    -DSHIELD=sage60_ec_right -DZMK_CONFIG="/workspaces/zmk-config/config" \
+    -DZMK_EXTRA_MODULES="/workspaces/zmk-config/config/sage60_drivers" &&\
+west build -p always -s /workspaces/zmk/app \
+    -d build/ec_left -b ae_nrf52840 -S studio-rpc-usb-uart -- \
+    -DSHIELD=sage60_ec_left -DZMK_CONFIG="/workspaces/zmk-config/config" \
+    -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n -DZMK_EXTRA_MODULES="/workspaces/zmk-config/config/sage60_drivers"
+
+# mx xiao
+
+west build -s /workspaces/zmk/app \
+    -d build/xiao_right -b seeeduino_xiao_ble -S studio-rpc-usb-uart -- \
+    -DSHIELD=sage60_xiao_right -DZMK_CONFIG="/workspaces/zmk-config/config" \
+    -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n &&\
+west build -s /workspaces/zmk/app \
+    -d build/xiao_left -b seeeduino_xiao_ble -- \
+    -DSHIELD=sage60_xiao_left -DZMK_CONFIG="/workspaces/zmk-config/config"
+
+# ec
+
+west build -p always -s /workspaces/zmk/app \
+    -d build/xiao_ec_right -b seeeduino_xiao_ble -S zmk-usb-logging -- \
+    -DSHIELD=sage60_xiao_ec_right -DZMK_CONFIG="/workspaces/zmk-config/config" \
+    -DZMK_EXTRA_MODULES="/workspaces/zmk-config/config/sage60_drivers" &&\
+west build -p always -s /workspaces/zmk/app \
+    -d build/xiao_ec_left -b seeeduino_xiao_ble -S zmk-usb-logging -- \
+    -DSHIELD=sage60_xiao_ec_left -DZMK_CONFIG="/workspaces/zmk-config/config" \
+    -DZMK_EXTRA_MODULES="/workspaces/zmk-config/config/sage60_drivers"
