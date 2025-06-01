@@ -1,0 +1,77 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# ZMK 静電容量式キーボードのADC設定について
+
+## ADC設定の基本知識
+
+1. **ZMKファームウェアでのADC設定**
+   - ADCは「Analog-to-Digital Converter」の略で、アナログ信号をデジタル値に変換する機能
+   - 静電容量式キーボードではキースイッチの押下検出に使用される
+   - DeviceTreeでの設定が必要
+
+2. **ADC設定に必要な要素**
+   - ステータス設定 (`status = "okay"`)
+   - アドレスセル数とサイズセル数の定義
+   - チャンネル設定
+   - ピン設定（入力ピンの指定）
+
+## NRF52840でのADC設定方法
+
+1. **基本的なADC設定**
+
+```dts
+&adc {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+    
+    channel@0 {
+        reg = <0>;
+        zephyr,gain = "ADC_GAIN_1_6";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 50)>;
+        zephyr,resolution = <12>;
+        zephyr,input-positive = <NRF_SAADC_AIN7>; /* P0.02 */
+    };
+};
+```
+
+2. **ピンマッピングの理解**
+   - NRF52840のAINピンがどの物理ピンに対応するかを理解することが重要
+   - 例: `NRF_SAADC_AIN7`はP0.02に対応
+   - Pro Microピン定義（D18 A4）とADCピン（AIN7）の対応関係を確認する
+
+3. **カスタムボードでの設定**
+   - ボード定義ファイル（`.dts`）でADC全体の設定を行う
+   - シールド定義ファイル（`.overlay`）で特定の用途に合わせた設定を上書きする
+
+## 問題のデバッグと解決方法
+
+1. **ADC設定の不一致を解決する**
+   - ボード定義ファイルとシールド定義ファイルで矛盾がないか確認
+   - 両方のファイルでADCピン設定が一致しているか確認
+
+2. **ピンマッピングの確認**
+   - カスタムボードのピンマッピングが正しく設定されているか確認
+   - 物理ピン、GPIOピン、ADCピンの関係を明確に理解する
+
+3. **ADCパラメータの最適化**
+   - ゲイン、リファレンス電圧、サンプリング時間、解像度などの設定を用途に合わせて調整
+   - 静電容量式キーボードの場合、これらのパラメータが検出感度に影響する
+
+4. **ADC動作の検証**
+   - デバッグログでADCの測定値を確認
+   - 押下検出のしきい値（`press-point`と`release-point`）の調整
+
+## 秋月電子製NRF52840ブレイクアウトボードの特記事項
+
+1. **標準のZMK設定との違い**
+   - 標準ではこのボードの設定が含まれていないため、カスタム設定が必要
+   - `config/boards/arm/ae_nrf52840`ディレクトリでカスタム設定を定義
+
+2. **Pro Microピン互換の実装**
+   - Arduino Pro Microの互換性を持たせるためのピン定義が必要
+   - `pro_micro: connector`ノードでピンマッピングを定義

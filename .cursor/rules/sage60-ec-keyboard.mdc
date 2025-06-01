@@ -1,0 +1,139 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Sage60 静電容量式キーボードの設定
+
+## 静電容量式キーボードの基本
+
+1. **静電容量式キースイッチの仕組み**
+   - 静電容量の変化を検出してキー入力を判断する
+   - 物理的な接点がないため、耐久性が高い
+   - ADC（アナログ-デジタル変換器）で静電容量の変化を測定
+
+2. **Sage60キーボードの特徴**
+   - 分割型60%レイアウト
+   - マルチプレクサを使用して複数の静電容量プレートを切り替え
+   - カスタムドライバでADCを介して入力を検出
+
+## kscan_ec_matrix ドライバの仕組み
+
+1. **ドライバの基本構造**
+   - ZMKのkscanドライバインターフェースを実装
+   - 静電容量の変化を検出するためのカスタムロジック
+   - マルチプレクサ制御とADC読み取りを組み合わせた実装
+
+2. **キー検出の流れ**
+   - マルチプレクサのセレクトピンを設定
+   - 行ピンを順番に有効化
+   - 静電容量を充電
+   - ADCで電圧レベルを読み取り
+   - しきい値と比較して押下状態を判断
+
+3. **コア機能**
+   ```c
+   static void kscan_ec_matrix_work_handler(struct k_work *work) {
+       // マルチプレクサのセレクトピン設定
+       // 静電容量プレートの充電
+       // ADC読み取り
+       // キー状態の判断とコールバック呼び出し
+   }
+   ```
+
+## ADC設定のポイント
+
+1. **ADCチャンネル設定**
+   ```dts
+   &adc {
+       status = "okay";
+       #address-cells = <1>;
+       #size-cells = <0>;
+       
+       channel@0 {
+           reg = <0>;
+           zephyr,gain = "ADC_GAIN_1_6";
+           zephyr,reference = "ADC_REF_INTERNAL";
+           zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 50)>;
+           zephyr,resolution = <12>;
+           zephyr,input-positive = <NRF_SAADC_AIN7>; /* P0.02 */
+       };
+   };
+   ```
+
+2. **重要なパラメータ**
+   - `zephyr,gain`: ADCの入力信号増幅率
+   - `zephyr,reference`: 基準電圧の設定
+   - `zephyr,acquisition-time`: サンプリング時間
+   - `zephyr,resolution`: ADC解像度（ビット数）
+   - `zephyr,input-positive`: 入力ピンの指定
+
+3. **ピンマッピングの理解**
+   - NRF52840のAINピンとGPIOピンの対応関係
+   - Pro Microピン互換での位置づけ
+
+## シールド設定の注意点
+
+1. **overlay設定**
+   ```dts
+   &kscan0 {
+       discharge-gpios = <&pro_micro 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+       power-gpios = <&pro_micro 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+       mux-en-gpios = <&pro_micro 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+       row-gpios = <...>;
+       sel-gpios = <...>;
+       col-channels = <4 6 7 5 1 0>;
+       press-point = <1000>;
+       release-point = <1000>;
+       io-channels = <&adc 0>;
+   };
+   ```
+
+2. **左右分割の違い**
+   - 左右で同じピン定義を使用
+   - 右側は`col-offset`で列オフセットを設定
+
+3. **検出しきい値の調整**
+   - `press-point`: キー押下と判断するADC値のしきい値
+   - `release-point`: キー解放と判断するADC値のしきい値
+
+## 秋月電子NRF52840ボードの特性
+
+1. **Pro Microピン互換**
+   ```dts
+   pro_micro: connector {
+       compatible = "arduino-pro-micro";
+       #gpio-cells = <2>;
+       gpio-map-mask = <0xffffffff 0xffffffc0>;
+       gpio-map-pass-thru = <0 0x3f>;
+       gpio-map 
+               = <0 0 &gpio0 4 0>,	/* D14 A0 */
+               <1 0 &gpio0 5 0>,	/* D15 A1 */
+               <2 0 &gpio0 30 0>,	/* D16 A2 */
+               <3 0 &gpio0 28 0>,	/* D17 A3 */
+               <4 0 &gpio0 2 0>,	/* D18 A4 (ADC AIN7) */
+               <5 0 &gpio0 3 0>,	/* D19 A5 */
+               /* ... */
+       };
+   };
+   ```
+
+2. **ADCピンの特定**
+   - D18 (A4)がADC AIN7 (P0.02)に対応
+   - 静電容量式キーボードではこのピンを使用
+
+## トラブルシューティング
+
+1. **キー検出不良の解決**
+   - ADCのゲイン設定の調整
+   - サンプリング時間の最適化
+   - しきい値（press-point/release-point）の調整
+
+2. **ノイズ対策**
+   - ADCフィルタリングの追加検討
+   - 適切なプルダウン/プルアップ抵抗の配置
+   - 充電時間の最適化
+
+3. **デバッグ方法**
+   - ログレベルを上げてADC値をモニタリング
+   - 特定のキーのADC値を比較して傾向を分析

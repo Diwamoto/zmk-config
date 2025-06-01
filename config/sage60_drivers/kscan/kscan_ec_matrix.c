@@ -81,34 +81,87 @@ static void kscan_ec_matrix_work_handler(struct k_work *work)
 
         for (int r = 0; r < cfg->row_num; ++r) {
 
-            // select mux sel
+            // select mux sel (TinyGoと同じ順序)
             uint8_t ch = cfg->cols[c];
-            gpio_pin_set_dt(&cfg->sels[0], ch & 1);
-            gpio_pin_set_dt(&cfg->sels[1], (ch & 2) >> 1);
-            gpio_pin_set_dt(&cfg->sels[2], (ch & 4) >> 2);
-            
-            // clear all row pins
-            for (int r2 = 0; r2 < cfg->row_num; ++r2)
-            {
-                gpio_pin_set_dt(&cfg->rows[r2], 0);
-            }
-
-            // charge capacitor
-            gpio_pin_configure_dt(&cfg->discharge, GPIO_INPUT);
-            gpio_pin_set_dt(&cfg->rows[r], 1);
-
-            // read key 
-            int err = adc_read(cfg->adc_channel.dev, &data->adc_seq);
+            int err = gpio_pin_set_dt(&cfg->sels[0], ch & 1);
             if (err != 0) {
-                LOG_ERR("Failed to read ADC: %d", err);
+                LOG_ERR("Failed to set sel0: %d", err);
+                return;
+            }
+            err = gpio_pin_set_dt(&cfg->sels[1], (ch & 2) >> 1);
+            if (err != 0) {
+                LOG_ERR("Failed to set sel1: %d", err);
+                return;
+            }
+            err = gpio_pin_set_dt(&cfg->sels[2], (ch & 4) >> 2);
+            if (err != 0) {
+                LOG_ERR("Failed to set sel2: %d", err);
                 return;
             }
 
+            // discharge (TinyGoと同じように毎回OUTPUT設定)
+            err = gpio_pin_configure_dt(&cfg->discharge, GPIO_OUTPUT);
+            if (err != 0) {
+                LOG_ERR("Failed to configure discharge: %d", err);
+                return;
+            }
+            gpio_pin_set_dt(&cfg->discharge, 0);  // 確実にLOWに設定
+            
+            // clear all row pins (TinyGoと同じ)
+            for (int r2 = 0; r2 < cfg->row_num; ++r2)
+            {
+                err = gpio_pin_set_dt(&cfg->rows[r2], 0);
+                if (err != 0) {
+                    LOG_ERR("Failed to set row%d: %d", r2, err);
+                    return;
+                }
+            }
+
+            // charge capacitor (TinyGoと同じ順序)
+            err = gpio_pin_configure_dt(&cfg->discharge, GPIO_INPUT);
+            if (err != 0) {
+                LOG_ERR("Failed to configure discharge: %d", err);
+                return;
+            }
+            err = gpio_pin_set_dt(&cfg->rows[r], 1);
+            if (err != 0) {
+                LOG_ERR("Failed to set row%d: %d", r, err);
+            }
+
+            // ADCバッファをクリア
+            data->adc_raw = 0;
+
+            // read key (複数回読み取りして平均を取る)
+            uint32_t adc_sum = 0;
+            const int readings = 3;
+            for (int i = 0; i < readings; i++) {
+                err = adc_read(cfg->adc_channel.dev, &data->adc_seq);
+                if (err != 0) {
+                    LOG_ERR("Failed to read ADC: %d", err);
+                    return;
+                }
+                adc_sum += data->adc_raw;
+                if (i < readings - 1) {
+                    k_usleep(10);  // 短い間隔で複数回読み取り
+                }
+            }
+            data->adc_raw = adc_sum / readings;  // 平均値を使用
+            
+            // ADCゲイン補正（ADC_GAIN_1_6は1/6に減衰するので6を掛ける）
+            uint16_t corrected_value;
+            if (data->adc_raw > 4095) {
+                // 12ビットADCの最大値を超えている場合は異常値
+                LOG_WRN("ADC value out of range: %d", data->adc_raw);
+                corrected_value = 0;
+            } else {
+                corrected_value = data->adc_raw * 6;  // ADC_GAIN_1_6の補正
+            }
+            
             // LOG_DBG("Row %d, Col %d, ADC raw value: %d", r, c, data->adc_raw);
 
             // bool old_state = data->matrix_state[r][c];
-            if (data->adc_raw > 1000) {
-                LOG_INF("row: %d, col: %d val: %d", r, c, data->adc_raw);
+            if (corrected_value > 1000) {
+                LOG_INF("row: %d, col: %d raw: %d corrected: %d", r, c, data->adc_raw, corrected_value);
             }
             // if (data->adc_raw > cfg->press_point && !old_state)
             // {
@@ -187,6 +240,7 @@ static int kscan_ec_matrix_init(const struct device *dev)
     ret = adc_channel_setup_dt(&cfg->adc_channel);
     if (ret < 0) {
         LOG_ERR("ADC channel setup error %d", ret);
+        return ret;
     }
 
     k_work_init_delayable(&data->work, kscan_ec_matrix_work_handler);
