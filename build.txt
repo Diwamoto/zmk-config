@@ -12,7 +12,6 @@ west build -s /workspaces/zmk/app \
 
 # ec
 
-rm -rf build  &&\
 west build -p always -s /workspaces/zmk/app \
     -d build/ec_right -b ae_nrf52840 -- \
     -DSHIELD=sage60_ec_right -DZMK_CONFIG="/workspaces/zmk-config/config" \
@@ -34,8 +33,8 @@ west build -s /workspaces/zmk/app \
 
 # ec
 
-west build -p always -s /workspaces/zmk/app \
-    -d build/xiao_ec_right -b seeeduino_xiao_ble -S zmk-usb-logging -- \
+west build -s /workspaces/zmk/app \
+    -d build/xiao_ec_right -b seeeduino_xiao_ble -S studio-rpc-usb-uart -S zmk-usb-logging -- \
     -DSHIELD=sage60_xiao_ec_right -DZMK_CONFIG="/workspaces/zmk-config/config" \
     -DZMK_EXTRA_MODULES="/workspaces/zmk-config/config/sage60_drivers" &&\
 west build -p always -s /workspaces/zmk/app \
