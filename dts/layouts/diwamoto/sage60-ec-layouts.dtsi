@@ -7,7 +7,6 @@
         display-name = "LAYOUT";
 
         transform = <&default_transform>;
-        kscan = <&kscan0>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0   55       0     0     0> // 0  row0,col0

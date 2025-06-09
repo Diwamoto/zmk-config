@@ -3,6 +3,10 @@
 
 config SHIELD_SAGE60_EC_LEFT
 	def_bool $(shields_list_contains,sage60_ec_left)
+	select ADC
+    select GPIO
 
 config SHIELD_SAGE60_EC_RIGHT
 	def_bool $(shields_list_contains,sage60_ec_right)
+	select ADC
+    select GPIO
