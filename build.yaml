@@ -20,9 +20,9 @@ include:
     shield: sage60_right
   ## xiao ec
   - board: seeeduino_xiao_ble
-    shield: sage60_xiao_ec_left
+    shield: sage60_ec_left
   - board: seeeduino_xiao_ble
-    shield: sage60_xiao_ec_right
+    shield: sage60_ec_right
   ## xiao setting reset
   - board: seeeduino_xiao_ble
     shield: settings_reset

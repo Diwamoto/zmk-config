@@ -12,3 +12,5 @@ manifest:
     - name: ec-support-zmk-module
       remote: petejohanson
       revision: main
+  self:
+    path: config
