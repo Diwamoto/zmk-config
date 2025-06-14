@@ -21,10 +21,14 @@ include:
   ## xiao ec
   - board: seeeduino_xiao_ble
     shield: sage60_ec_left
-    snippets: zmk-usb-logging
+    snippet: zmk-usb-logging
   - board: seeeduino_xiao_ble
     shield: sage60_ec_right
-    snippets: zmk-usb-logging
+    snippet: zmk-usb-logging
+  - board: seeeduino_xiao_ble
+    shield: sage60_ec_left
+    snippet: enable_ec_calibrator
+    artifact-name: sage60_ec_calibrator
   ## xiao setting reset
   - board: seeeduino_xiao_ble
     shield: settings_reset
