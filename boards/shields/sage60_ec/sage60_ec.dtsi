@@ -126,11 +126,11 @@ RC(3,0) RC(3,1) RC(3,2) RC(3,3) RC(3,4) RC(3,5) RC(3,6)  RC(3,13) RC(3,12) RC(3,
 		adc-read-settle-us = <1>;
 
 		strobe-gpios
-			= <&xiao_d 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,       /* D1 */
-            <&xiao_d 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,       /* D2 */
-            <&gpio0 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,        /* P0.16 */
-            <&gpio1 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,        /* P1.0 */
-            <&gpio1 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;        /* P1.10 */
+			= <&xiao_d 1 GPIO_ACTIVE_HIGH>,       /* D1 */
+            <&xiao_d 2 GPIO_ACTIVE_HIGH>,       /* D2 */
+            <&gpio0 16 GPIO_ACTIVE_HIGH>,        /* P0.16 */
+            <&gpio1 0 GPIO_ACTIVE_HIGH>,        /* P1.0 */ 
+            <&gpio1 10 GPIO_ACTIVE_HIGH>;        /* P1.10 */
 
 		input-gpios
 			= <&mux 4 0>
