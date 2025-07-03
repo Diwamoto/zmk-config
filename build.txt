@@ -43,3 +43,6 @@ west build -p always -s /workspaces/zmk/app \
     -d build/xiao_ec_left -b seeeduino_xiao_ble -S zmk-usb-logging -- \
     -DSHIELD=sage60_xiao_ec_left -DZMK_CONFIG="/workspaces/zmk-config/config" \
     -DZMK_EXTRA_MODULES="/workspaces/zmk-config/config/sage60_drivers"
+
+
+ west build -s /workspaces/zmk/app -d "./build/xiao_ec_left" -b "seeeduino_xiao_ble" -S "zmk-usb-logging" -- -DZMK_CONFIG="/workspaces/zmk-config/config" -DSHIELD="sage60_ec_left" -DZMK_EXTRA_MODULES="/workspaces/zmk-config" 

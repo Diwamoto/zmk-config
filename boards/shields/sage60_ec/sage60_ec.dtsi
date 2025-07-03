@@ -108,11 +108,11 @@ RC(3,0) RC(3,1) RC(3,2) RC(3,3) RC(3,4) RC(3,5) RC(3,6)  RC(3,13) RC(3,12) RC(3,
     mux: mux {
 		compatible = "zmk,gpio-mux";
 		select-gpios
-			= <&xiao_d 4 GPIO_ACTIVE_HIGH>,       /* D4 */
-            <&xiao_d 5 GPIO_ACTIVE_HIGH>,   /* D5 */
-            <&xiao_d 6 GPIO_ACTIVE_HIGH>;   /* D6 */
+			= <&gpio0 4 GPIO_ACTIVE_HIGH>,       /* D4 - P0.04 */
+            <&gpio0 5 GPIO_ACTIVE_HIGH>,   /* D5 - P0.05 */
+            <&gpio1 11 GPIO_ACTIVE_HIGH>;   /* D6 - P1.11 */
 
-		en-gpios = <&xiao_d 9 GPIO_ACTIVE_LOW>;
+		en-gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
 
 		gpio-controller;
 		ngpios = <8>;
@@ -126,8 +126,8 @@ RC(3,0) RC(3,1) RC(3,2) RC(3,3) RC(3,4) RC(3,5) RC(3,6)  RC(3,13) RC(3,12) RC(3,
 		adc-read-settle-us = <1>;
 
 		strobe-gpios
-			= <&xiao_d 1 GPIO_ACTIVE_HIGH>,       /* D1 */
-            <&xiao_d 2 GPIO_ACTIVE_HIGH>,       /* D2 */
+			= <&gpio0 3 GPIO_ACTIVE_HIGH>,       /* D1 - P0.03 */
+            <&gpio0 28 GPIO_ACTIVE_HIGH>,       /* D2 - P0.28 */
             <&gpio0 16 GPIO_ACTIVE_HIGH>,        /* P0.16 */
             <&gpio1 0 GPIO_ACTIVE_HIGH>,        /* P1.0 */ 
             <&gpio1 10 GPIO_ACTIVE_HIGH>;        /* P1.10 */
@@ -141,7 +141,7 @@ RC(3,0) RC(3,1) RC(3,2) RC(3,3) RC(3,4) RC(3,5) RC(3,6)  RC(3,13) RC(3,12) RC(3,
 			, <&mux 0 0>
 			;
 
-		drain-gpios = <&xiao_d 3 GPIO_ACTIVE_HIGH>;
+		drain-gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>; /* D3 - P0.29 */
 		io-channels = <&adc 1>;
         power-gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
 	    matrix-warm-up-us = <500>;
